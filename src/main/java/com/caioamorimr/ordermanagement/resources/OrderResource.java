@@ -1,7 +1,7 @@
 package com.caioamorimr.ordermanagement.resources;
 
-import com.caioamorimr.ordermanagement.entities.User;
-import com.caioamorimr.ordermanagement.services.UserService;
+import com.caioamorimr.ordermanagement.entities.Order;
+import com.caioamorimr.ordermanagement.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,21 +12,21 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/users")
-public class UserResource {
+@RequestMapping(value = "/orders")
+public class OrderResource {
 
     @Autowired
-    private UserService userService;
+    private OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<User>> findAll() {
-        List<User> users = userService.findAll();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<List<Order>> findAll() {
+        List<Order> orders = orderService.findAll();
+        return ResponseEntity.ok(orders);
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<User> findById(@PathVariable Long id) {
-        User user = userService.findById(id);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<Order> findById(@PathVariable Long id) {
+        Order order = orderService.findById(id);
+        return ResponseEntity.ok(order);
     }
 }

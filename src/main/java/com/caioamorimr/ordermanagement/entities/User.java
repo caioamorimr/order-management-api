@@ -1,10 +1,11 @@
 package com.caioamorimr.ordermanagement.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "tb_user")
@@ -21,10 +22,13 @@ public class User implements Serializable {
     private String phone;
     private String password;
 
-    public User(){}
+    @OneToMany(mappedBy = "client")
+    private List<Order> orders = new ArrayList<>();
+
+    public User() {
+    }
 
     public User(Long id, String name, String email, String phone, String password) {
-        super();
         this.id = id;
         this.name = name;
         this.email = email;
@@ -70,6 +74,10 @@ public class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Order> getOrders() {
+        return Collections.unmodifiableList(orders);
     }
 
     @Override
