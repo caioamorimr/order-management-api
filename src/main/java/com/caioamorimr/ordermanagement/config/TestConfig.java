@@ -1,8 +1,10 @@
 package com.caioamorimr.ordermanagement.config;
 
+import com.caioamorimr.ordermanagement.entities.Category;
 import com.caioamorimr.ordermanagement.entities.Order;
 import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
+import com.caioamorimr.ordermanagement.repositories.CategoryRepository;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class TestConfig implements CommandLineRunner {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     @Override
     public void run(String... args) throws Exception {
         User u1 = new User(null, "Caio Amorim", "caio@email.com", "988888888", "123456");
@@ -32,8 +37,14 @@ public class TestConfig implements CommandLineRunner {
         Order o2 = new Order(null, Instant.parse("2019-07-21T03:42:10Z"), OrderStatus.WAITING_PAYMENT, u2);
         Order o3 = new Order(null, Instant.parse("2019-07-22T15:21:22Z"), OrderStatus.WAITING_PAYMENT, u1);
 
+        Category cat1 = new Category(null, "Electronics");
+        Category cat2 = new Category(null, "Books");
+        Category cat3 = new Category(null, "Computers");
+
         userRepository.saveAll(List.of(u1, u2));
         orderRepository.saveAll(List.of(o1, o2, o3));
+        categoryRepository.saveAll(List.of(cat1, cat2, cat3));
+
 
     }
 }
