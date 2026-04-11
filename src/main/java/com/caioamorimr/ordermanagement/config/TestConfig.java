@@ -1,14 +1,8 @@
 package com.caioamorimr.ordermanagement.config;
 
-import com.caioamorimr.ordermanagement.entities.Category;
-import com.caioamorimr.ordermanagement.entities.Order;
-import com.caioamorimr.ordermanagement.entities.Product;
-import com.caioamorimr.ordermanagement.entities.User;
+import com.caioamorimr.ordermanagement.entities.*;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
-import com.caioamorimr.ordermanagement.repositories.CategoryRepository;
-import com.caioamorimr.ordermanagement.repositories.OrderRepository;
-import com.caioamorimr.ordermanagement.repositories.ProductRepository;
-import com.caioamorimr.ordermanagement.repositories.UserRepository;
+import com.caioamorimr.ordermanagement.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +27,9 @@ public class TestConfig implements CommandLineRunner {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -68,6 +65,12 @@ public class TestConfig implements CommandLineRunner {
         userRepository.saveAll(List.of(u1, u2));
         orderRepository.saveAll(List.of(o1, o2, o3));
 
+        OrderItem oi1 = new OrderItem(o1, p1, 2, p1.getPrice());
+        OrderItem oi2 = new OrderItem(o1, p3, 1, p3.getPrice());
+        OrderItem oi3 = new OrderItem(o2, p3, 2, p3.getPrice());
+        OrderItem oi4 = new OrderItem(o3, p5, 2, p5.getPrice());
+
+        orderItemRepository.saveAll(List.of(oi1, oi2, oi3, oi4));
 
     }
 }
