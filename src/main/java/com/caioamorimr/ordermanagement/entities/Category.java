@@ -19,7 +19,8 @@ public class Category implements Serializable {
     private Long id;
     private String name;
 
-    @Transient
+    @JsonIgnore
+    @ManyToMany(mappedBy = "categories")
     private Set<Product> products = new HashSet<>();
 
     public Category() {
@@ -47,7 +48,7 @@ public class Category implements Serializable {
     }
 
     public Set<Product> getProducts() {
-        return products;
+        return Collections.unmodifiableSet(products);
     }
 
     @Override

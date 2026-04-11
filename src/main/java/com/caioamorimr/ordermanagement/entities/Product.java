@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,7 +25,8 @@ public class Product implements Serializable {
     private BigDecimal price;
     private String imgUrl;
 
-    @Transient
+    @ManyToMany
+    @JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
     public Product() {
@@ -79,7 +81,11 @@ public class Product implements Serializable {
     }
 
     public Set<Category> getCategories() {
-        return categories;
+        return Collections.unmodifiableSet(categories);
+    }
+
+    public void addCategory(Category category) {
+        this.categories.add(category);
     }
 
     @Override
