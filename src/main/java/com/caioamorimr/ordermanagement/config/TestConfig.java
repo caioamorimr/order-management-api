@@ -2,16 +2,19 @@ package com.caioamorimr.ordermanagement.config;
 
 import com.caioamorimr.ordermanagement.entities.Category;
 import com.caioamorimr.ordermanagement.entities.Order;
+import com.caioamorimr.ordermanagement.entities.Product;
 import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
 import com.caioamorimr.ordermanagement.repositories.CategoryRepository;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
+import com.caioamorimr.ordermanagement.repositories.ProductRepository;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -28,6 +31,9 @@ public class TestConfig implements CommandLineRunner {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     @Override
     public void run(String... args) throws Exception {
         User u1 = new User(null, "Caio Amorim", "caio@email.com", "988888888", "123456");
@@ -41,9 +47,16 @@ public class TestConfig implements CommandLineRunner {
         Category cat2 = new Category(null, "Books");
         Category cat3 = new Category(null, "Computers");
 
+        Product p1 = new Product(null, "The Lord of the Rings", "Lorem ipsum dolor sit amet, consectetur.", new BigDecimal("90.5"), "");
+        Product p2 = new Product(null, "Smart TV", "Nulla eu imperdiet purus. Maecenas ante.", new BigDecimal("2190.0"), "");
+        Product p3 = new Product(null, "Macbook Pro", "Nam eleifend maximus tortor, at mollis.", new BigDecimal("1250.0"), "");
+        Product p4 = new Product(null, "PC Gamer", "Donec aliquet odio ac rhoncus cursus.", new BigDecimal("1200.0"), "");
+        Product p5 = new Product(null, "Rails for Dummies", "Cras fringilla convallis sem vel faucibus.", new BigDecimal("100.99"), "");
+
         userRepository.saveAll(List.of(u1, u2));
         orderRepository.saveAll(List.of(o1, o2, o3));
         categoryRepository.saveAll(List.of(cat1, cat2, cat3));
+        productRepository.saveAll(List.of(p1, p2, p3, p4, p5));
 
 
     }
