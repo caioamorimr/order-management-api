@@ -1,6 +1,7 @@
 package com.caioamorimr.ordermanagement.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serial;
@@ -22,11 +23,13 @@ public class Payment implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
     private Instant moment;
 
+    @JsonIgnore
     @OneToOne
     @MapsId
     private Order order;
 
-    public Payment() {}
+    public Payment() {
+    }
 
     public Payment(Long id, Instant moment, Order order) {
         this.id = id;

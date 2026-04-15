@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
@@ -92,6 +93,12 @@ public class Order implements Serializable {
 
     public Set<OrderItem> getItems() {
         return Collections.unmodifiableSet(items);
+    }
+
+    public BigDecimal getTotal() {
+        return items.stream()
+                .map(OrderItem::getSubTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
