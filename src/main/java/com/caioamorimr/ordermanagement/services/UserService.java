@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.services;
 
 import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
+import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class UserService {
 
     public User findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 
     public User insert(User user) {
@@ -27,8 +28,8 @@ public class UserService {
     }
 
     public void delete(Long id) {
-        if(!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found: " + id);
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException(id);
         }
         userRepository.deleteById(id);
     }
