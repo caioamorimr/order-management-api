@@ -1,14 +1,16 @@
 package com.caioamorimr.ordermanagement.resources;
 
-import com.caioamorimr.ordermanagement.entities.Product;
+import com.caioamorimr.ordermanagement.dto.ProductDTO;
 import com.caioamorimr.ordermanagement.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "/products")
@@ -18,26 +20,24 @@ public class ProductResource {
     private ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> findAll() {
-        List<Product> products = productService.findAll();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<Page<ProductDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(productService.findAll(pageable));
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Product> findById(@PathVariable Long id) {
-        Product product = productService.findById(id);
-        return ResponseEntity.ok(product);
+    public ResponseEntity<ProductDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Product> insert(@RequestBody Product product) {
-        product =  productService.insert(product);
+    public ResponseEntity<ProductDTO> insert(@Valid @RequestBody ProductDTO dto) {
+        ProductDTO created = productService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(product.getId())
+                .buildAndExpand(created.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(product);
+        return ResponseEntity.created(uri).body(created);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -47,9 +47,7 @@ public class ProductResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product) {
-        product =  productService.update(id, product);
-        return ResponseEntity.ok(product);
+    public ResponseEntity<ProductDTO> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
+        return ResponseEntity.ok(productService.update(id, dto));
     }
-
 }

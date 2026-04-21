@@ -1,14 +1,18 @@
 package com.caioamorimr.ordermanagement.resources;
 
-import com.caioamorimr.ordermanagement.entities.Order;
+import com.caioamorimr.ordermanagement.dto.OrderDTO;
+import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
+import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.services.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "/orders")
@@ -18,26 +22,24 @@ public class OrderResource {
     private OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<Order>> findAll() {
-        List<Order> orders = orderService.findAll();
-        return ResponseEntity.ok(orders);
+    public ResponseEntity<Page<OrderDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(orderService.findAll(pageable));
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Order> findById(@PathVariable Long id) {
-        Order order = orderService.findById(id);
-        return ResponseEntity.ok(order);
+    public ResponseEntity<OrderDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Order> insert(@RequestBody Order order) {
-        order = orderService.insert(order);
+    public ResponseEntity<OrderDTO> insert(@Valid @RequestBody OrderInsertDTO dto) {
+        OrderDTO created = orderService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(order.getId())
+                .buildAndExpand(created.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(order);
+        return ResponseEntity.created(uri).body(created);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -47,8 +49,7 @@ public class OrderResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<Order> update(@PathVariable Long id, @RequestBody Order order) {
-        order = orderService.update(id, order);
-        return ResponseEntity.ok(order);
+    public ResponseEntity<OrderDTO> update(@PathVariable Long id, @Valid @RequestBody OrderUpdateDTO dto) {
+        return ResponseEntity.ok(orderService.update(id, dto));
     }
 }

@@ -1,14 +1,18 @@
 package com.caioamorimr.ordermanagement.resources;
 
-import com.caioamorimr.ordermanagement.entities.User;
+import com.caioamorimr.ordermanagement.dto.UserDTO;
+import com.caioamorimr.ordermanagement.dto.UserInsertDTO;
+import com.caioamorimr.ordermanagement.dto.UserUpdateDTO;
 import com.caioamorimr.ordermanagement.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "/users")
@@ -18,26 +22,24 @@ public class UserResource {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<User>> findAll() {
-        List<User> users = userService.findAll();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<Page<UserDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(userService.findAll(pageable));
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<User> findById(@PathVariable Long id) {
-        User user = userService.findById(id);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<User> insert(@RequestBody User user) {
-        user = userService.insert(user);
+    public ResponseEntity<UserDTO> insert(@Valid @RequestBody UserInsertDTO dto) {
+        UserDTO created = userService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(user.getId())
+                .buildAndExpand(created.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(user);
+        return ResponseEntity.created(uri).body(created);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -47,8 +49,7 @@ public class UserResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User user) {
-        user = userService.update(id, user);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
+        return ResponseEntity.ok(userService.update(id, dto));
     }
 }

@@ -1,14 +1,16 @@
 package com.caioamorimr.ordermanagement.resources;
 
-import com.caioamorimr.ordermanagement.entities.Category;
+import com.caioamorimr.ordermanagement.dto.CategoryDTO;
 import com.caioamorimr.ordermanagement.services.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "/categories")
@@ -18,26 +20,24 @@ public class CategoryResource {
     private CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<Category>> findAll() {
-        List<Category> categories = categoryService.findAll();
-        return ResponseEntity.ok(categories);
+    public ResponseEntity<Page<CategoryDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(categoryService.findAll(pageable));
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<Category> findById(@PathVariable Long id) {
-        Category category = categoryService.findById(id);
-        return ResponseEntity.ok(category);
+    public ResponseEntity<CategoryDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(categoryService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Category> insert(@RequestBody Category category) {
-        category = categoryService.insert(category);
+    public ResponseEntity<CategoryDTO> insert(@Valid @RequestBody CategoryDTO dto) {
+        CategoryDTO created = categoryService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(category.getId())
+                .buildAndExpand(created.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(category);
+        return ResponseEntity.created(uri).body(created);
     }
 
     @DeleteMapping(value = "/{id}")
@@ -47,9 +47,7 @@ public class CategoryResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<Category> update(@PathVariable Long id, @RequestBody Category category) {
-        category = categoryService.update(id, category);
-        return ResponseEntity.ok(category);
+    public ResponseEntity<CategoryDTO> update(@PathVariable Long id, @Valid @RequestBody CategoryDTO dto) {
+        return ResponseEntity.ok(categoryService.update(id, dto));
     }
-
 }
