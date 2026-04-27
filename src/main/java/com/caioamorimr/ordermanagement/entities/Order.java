@@ -36,7 +36,7 @@ public class Order implements Serializable {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
-    @OneToMany(mappedBy = "id.order")
+    @OneToMany(mappedBy = "id.order", cascade = CascadeType.ALL)
     private Set<OrderItem> items = new HashSet<>();
 
     public Order() {
@@ -99,6 +99,10 @@ public class Order implements Serializable {
         return items.stream()
                 .map(OrderItem::getSubTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void addItem(OrderItem item) {
+        this.items.add(item);
     }
 
     @Override

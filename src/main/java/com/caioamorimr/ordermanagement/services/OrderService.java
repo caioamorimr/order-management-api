@@ -2,10 +2,15 @@ package com.caioamorimr.ordermanagement.services;
 
 import com.caioamorimr.ordermanagement.dto.OrderDTO;
 import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
+import com.caioamorimr.ordermanagement.dto.OrderItemDTO;
+import com.caioamorimr.ordermanagement.dto.OrderItemInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.entities.Order;
+import com.caioamorimr.ordermanagement.entities.OrderItem;
+import com.caioamorimr.ordermanagement.entities.Product;
 import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
+import com.caioamorimr.ordermanagement.repositories.ProductRepository;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import com.caioamorimr.ordermanagement.services.exceptions.DatabaseException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
@@ -28,6 +33,9 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     @Transactional(readOnly = true)
     public Page<OrderDTO> findAll(Pageable pageable) {
         return orderRepository.findAll(pageable).map(OrderDTO::new);
@@ -49,6 +57,13 @@ public class OrderService {
         order.setMoment(dto.getMoment() != null ? dto.getMoment() : Instant.now());
         order.setOrderStatus(dto.getOrderStatus());
         order.setClient(client);
+
+        for (OrderItemInsertDTO itemDto : dto.getItems()) {
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException(itemDto.getProductId()));
+            OrderItem item = new OrderItem(order, product, itemDto.getQuantity(), product.getPrice());
+            order.addItem(item);
+        }
 
         return new OrderDTO(orderRepository.save(order));
     }
