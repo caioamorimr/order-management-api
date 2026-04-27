@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.resources.exceptions;
 
 import com.caioamorimr.ordermanagement.services.exceptions.DatabaseException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
+import com.caioamorimr.ordermanagement.services.exceptions.ResourcesNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,15 @@ public class ResourceExceptionHandler {
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
             err.addError(fieldError.getField(), fieldError.getDefaultMessage());
         }
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ResourcesNotFoundException.class)
+    public ResponseEntity<StandardError> resourcesNotFound(ResourcesNotFoundException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        StandardError err = new StandardError(
+                Instant.now(), status.value(), "Resources Not Found", e.getMessage(), request.getRequestURI()
+        );
         return ResponseEntity.status(status).body(err);
     }
 }

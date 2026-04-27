@@ -1,7 +1,5 @@
 package com.caioamorimr.ordermanagement.dto;
 
-import com.caioamorimr.ordermanagement.entities.Category;
-import com.caioamorimr.ordermanagement.entities.Product;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -10,12 +8,8 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class ProductDTO {
-
-    private Long id;
-
+public class ProductRequestDTO {
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
@@ -31,28 +25,7 @@ public class ProductDTO {
 
     private Set<Long> categoryIds = new HashSet<>();
 
-    private Set<CategoryDTO> categories;
-
-    public ProductDTO() {
-    }
-
-    public ProductDTO(Product product) {
-        this.id = product.getId();
-        this.name = product.getName();
-        this.description = product.getDescription();
-        this.price = product.getPrice();
-        this.imgUrl = product.getImgUrl();
-        Set<CategoryDTO> cats = product.getCategories().stream()
-                .map(CategoryDTO::new)
-                .collect(Collectors.toSet());
-        this.categories = cats;
-        this.categoryIds = cats.stream()
-                .map(CategoryDTO::getId)
-                .collect(Collectors.toSet());
-    }
-
-    public Long getId() {
-        return id;
+    public ProductRequestDTO() {
     }
 
     public String getName() {
@@ -93,9 +66,5 @@ public class ProductDTO {
 
     public void setCategoryIds(Set<Long> categoryIds) {
         this.categoryIds = categoryIds;
-    }
-
-    public Set<CategoryDTO> getCategories() {
-        return categories;
     }
 }

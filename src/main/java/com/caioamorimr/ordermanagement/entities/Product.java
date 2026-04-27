@@ -90,7 +90,7 @@ public class Product implements Serializable {
     }
 
     @JsonIgnore
-    public Set<Order> getOrders(){
+    public Set<Order> getOrders() {
         return items.stream()
                 .map(OrderItem::getOrder)
                 .collect(Collectors.toUnmodifiableSet());
@@ -98,6 +98,14 @@ public class Product implements Serializable {
 
     public void addCategory(Category category) {
         this.categories.add(category);
+    }
+
+    public void clearCategories() {
+        this.categories.clear();
+    }
+
+    public void removeCategory(Long categoryId) {
+        this.categories.removeIf(c -> c.getId().equals(categoryId));
     }
 
     @Override

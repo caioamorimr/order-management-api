@@ -1,6 +1,7 @@
 package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.ProductDTO;
+import com.caioamorimr.ordermanagement.dto.ProductRequestDTO;
 import com.caioamorimr.ordermanagement.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class ProductResource {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> insert(@Valid @RequestBody ProductDTO dto) {
+    public ResponseEntity<ProductDTO> insert(@Valid @RequestBody ProductRequestDTO dto) {
         ProductDTO created = productService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -47,7 +48,18 @@ public class ProductResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<ProductDTO> update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
+    public ResponseEntity<ProductDTO> update(@PathVariable Long id, @Valid @RequestBody ProductRequestDTO dto) {
         return ResponseEntity.ok(productService.update(id, dto));
+    }
+
+    @PutMapping(value = "/{productId}/categories/{categoryId}")
+    public ResponseEntity<ProductDTO> addCategory(@PathVariable Long productId, @PathVariable Long categoryId) {
+        return ResponseEntity.ok(productService.addCategory(productId, categoryId));
+    }
+
+    @DeleteMapping(value = "/{productId}/categories/{categoryId}")
+    public ResponseEntity<Void> removeCategory(@PathVariable Long productId, @PathVariable Long categoryId) {
+        productService.removeCategory(productId, categoryId);
+        return ResponseEntity.noContent().build();
     }
 }
