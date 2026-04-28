@@ -67,9 +67,8 @@ class UserServiceTest {
         Page<UserDTO> result = userService.findAll(pageable);
 
         assertThat(result).isNotEmpty();
-        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
-        assertThat(result.getContent().get(0).getEmail()).isEqualTo("caio@email.com");
-        // Senha nunca deve aparecer no DTO
+        assertThat(result.getContent().getFirst().getId()).isEqualTo(1L);
+        assertThat(result.getContent().getFirst().getEmail()).isEqualTo("caio@email.com");
         verify(userRepository, times(1)).findAll(pageable);
     }
 
@@ -125,5 +124,17 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.update(99L, updateDTO))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("update should update user when exists")
+    void update_shouldUpdateUser_whenExists() {
+        when(userRepository.getReferenceById(1L)).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        UserDTO result = userService.update(1L, updateDTO);
+
+        assertThat(result.getName()).isEqualTo("Caio Updated");
+        verify(userRepository).save(user);
     }
 }
