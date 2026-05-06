@@ -1,6 +1,5 @@
 package com.caioamorimr.ordermanagement.dto;
 
-import com.caioamorimr.ordermanagement.entities.Category;
 import com.caioamorimr.ordermanagement.entities.Product;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,8 +1,17 @@
 package com.caioamorimr.ordermanagement.config;
 
-import com.caioamorimr.ordermanagement.entities.*;
+import com.caioamorimr.ordermanagement.entities.Category;
+import com.caioamorimr.ordermanagement.entities.Order;
+import com.caioamorimr.ordermanagement.entities.OrderItem;
+import com.caioamorimr.ordermanagement.entities.Payment;
+import com.caioamorimr.ordermanagement.entities.Product;
+import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
-import com.caioamorimr.ordermanagement.repositories.*;
+import com.caioamorimr.ordermanagement.repositories.CategoryRepository;
+import com.caioamorimr.ordermanagement.repositories.OrderItemRepository;
+import com.caioamorimr.ordermanagement.repositories.OrderRepository;
+import com.caioamorimr.ordermanagement.repositories.ProductRepository;
+import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;

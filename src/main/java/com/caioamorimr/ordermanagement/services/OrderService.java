@@ -2,7 +2,6 @@ package com.caioamorimr.ordermanagement.services;
 
 import com.caioamorimr.ordermanagement.dto.OrderDTO;
 import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
-import com.caioamorimr.ordermanagement.dto.OrderItemDTO;
 import com.caioamorimr.ordermanagement.dto.OrderItemInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.entities.Order;
