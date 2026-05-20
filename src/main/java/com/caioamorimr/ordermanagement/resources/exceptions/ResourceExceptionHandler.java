@@ -6,6 +6,7 @@ import com.caioamorimr.ordermanagement.services.exceptions.ResourcesNotFoundExce
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -53,5 +54,10 @@ public class ResourceExceptionHandler {
                 Instant.now(), status.value(), "Resources Not Found", e.getMessage(), request.getRequestURI()
         );
         return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Void> handleBadCredentials() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
