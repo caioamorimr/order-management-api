@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.entities;
 
 import com.caioamorimr.ordermanagement.entities.pk.OrderItemPK;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -21,7 +22,10 @@ public class OrderItem implements Serializable {
     @EmbeddedId
     private OrderItemPK id = new OrderItemPK();
 
+    @Column(nullable = false)
     private Integer quantity;
+
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
 
     public OrderItem() {

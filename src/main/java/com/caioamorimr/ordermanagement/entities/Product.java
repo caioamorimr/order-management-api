@@ -1,6 +1,7 @@
 package com.caioamorimr.ordermanagement.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,9 +31,17 @@ public class Product implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 100)
     private String name;
+
+    @Column(length = 1000)
     private String description;
+
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
+
+    @Column(length = 500)
     private String imgUrl;
 
     @ManyToMany
