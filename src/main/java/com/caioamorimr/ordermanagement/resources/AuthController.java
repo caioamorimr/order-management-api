@@ -4,7 +4,6 @@ import com.caioamorimr.ordermanagement.dto.LoginRequest;
 import com.caioamorimr.ordermanagement.dto.TokenResponse;
 import com.caioamorimr.ordermanagement.security.JwtUtil;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

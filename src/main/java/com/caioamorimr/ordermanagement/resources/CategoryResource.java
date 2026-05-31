@@ -3,7 +3,6 @@ package com.caioamorimr.ordermanagement.resources;
 import com.caioamorimr.ordermanagement.dto.CategoryDTO;
 import com.caioamorimr.ordermanagement.services.CategoryService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +22,11 @@ import java.net.URI;
 @RequestMapping(value = "/categories")
 public class CategoryResource {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+
+    public CategoryResource(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @GetMapping
     public ResponseEntity<Page<CategoryDTO>> findAll(Pageable pageable) {

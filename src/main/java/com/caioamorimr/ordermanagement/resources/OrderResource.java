@@ -5,7 +5,6 @@ import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.services.OrderService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,11 @@ import java.net.URI;
 @RequestMapping(value = "/orders")
 public class OrderResource {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+
+    public OrderResource(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @GetMapping
     public ResponseEntity<Page<OrderDTO>> findAll(Pageable pageable) {

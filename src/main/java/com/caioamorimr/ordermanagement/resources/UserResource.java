@@ -5,7 +5,6 @@ import com.caioamorimr.ordermanagement.dto.UserInsertDTO;
 import com.caioamorimr.ordermanagement.dto.UserUpdateDTO;
 import com.caioamorimr.ordermanagement.services.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,11 @@ import java.net.URI;
 @RequestMapping(value = "/users")
 public class UserResource {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserResource(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public ResponseEntity<Page<UserDTO>> findAll(Pageable pageable) {
