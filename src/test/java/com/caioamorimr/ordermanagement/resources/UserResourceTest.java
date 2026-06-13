@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.UserDTO;
 import com.caioamorimr.ordermanagement.dto.UserInsertDTO;
+import com.caioamorimr.ordermanagement.dto.UserUpdateDTO;
 import com.caioamorimr.ordermanagement.security.JwtUtil;
 import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.UserService;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -29,6 +31,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,6 +55,7 @@ class UserResourceTest {
 
     private UserDTO userDTO;
     private UserInsertDTO insertDTO;
+    private UserUpdateDTO updateDTO;
 
     @BeforeEach
     void setUp() {
@@ -62,6 +66,11 @@ class UserResourceTest {
         insertDTO.setEmail("caio@email.com");
         insertDTO.setPhone("988888888");
         insertDTO.setPassword("123456");
+
+        updateDTO = new UserUpdateDTO();
+        updateDTO.setName("Caio");
+        updateDTO.setEmail("caio@email.com");
+        updateDTO.setPhone("988888888");
     }
 
     @Test
@@ -136,6 +145,32 @@ class UserResourceTest {
                         .content(objectMapper.writeValueAsString(insertDTO)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errors[0].fieldName").value("email"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("PUT /users/{id} should return 200 when payload is valid")
+    void update_shouldReturn200_whenPayloadIsValid() throws Exception {
+        when(userService.update(anyLong(), any(UserUpdateDTO.class))).thenReturn(userDTO);
+
+        mockMvc.perform(put("/users/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("PUT /users/{id} should return 404 when user does not exist")
+    void update_shouldReturn404_whenUserNotFound() throws Exception {
+        when(userService.update(anyLong(), any(UserUpdateDTO.class))).thenThrow(new ResourceNotFoundException(99L));
+
+        mockMvc.perform(put("/users/99")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
