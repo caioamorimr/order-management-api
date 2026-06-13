@@ -2,6 +2,8 @@ package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.ProductDTO;
 import com.caioamorimr.ordermanagement.dto.ProductRequestDTO;
+import com.caioamorimr.ordermanagement.security.JwtUtil;
+import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.ProductService;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +47,12 @@ class ProductResourceTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
 
     private ProductDTO productDTO;
     private ProductRequestDTO requestDTO;

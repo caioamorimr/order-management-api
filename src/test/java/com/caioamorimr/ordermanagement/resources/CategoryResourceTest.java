@@ -1,6 +1,8 @@
 package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.CategoryDTO;
+import com.caioamorimr.ordermanagement.security.JwtUtil;
+import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.CategoryService;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +44,12 @@ class CategoryResourceTest {
 
     @MockitoBean
     private CategoryService categoryService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
 
     private CategoryDTO categoryDTO;
 

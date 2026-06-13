@@ -5,6 +5,8 @@ import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderItemInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
+import com.caioamorimr.ordermanagement.security.JwtUtil;
+import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.OrderService;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +49,12 @@ class OrderResourceTest {
 
     @MockitoBean
     private OrderService orderService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
 
     private OrderDTO orderDTO;
     private OrderInsertDTO insertDTO;
