@@ -7,6 +7,7 @@ import com.caioamorimr.ordermanagement.entities.Payment;
 import com.caioamorimr.ordermanagement.entities.Product;
 import com.caioamorimr.ordermanagement.entities.User;
 import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
+import com.caioamorimr.ordermanagement.entities.enums.Role;
 import com.caioamorimr.ordermanagement.repositories.CategoryRepository;
 import com.caioamorimr.ordermanagement.repositories.OrderItemRepository;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
@@ -48,7 +49,6 @@ public class TestConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Populate only if database is empty — prevents duplicate inserts when tests reuse the in-memory DB
         if (categoryRepository.count() == 0) {
             Category cat1 = new Category(null, "Electronics");
             Category cat2 = new Category(null, "Books");
@@ -69,8 +69,8 @@ public class TestConfig implements CommandLineRunner {
             p5.addCategory(cat2);
             productRepository.saveAll(List.of(p1, p2, p3, p4, p5));
 
-            User u1 = new User(null, "Caio Amorim", "caio@email.com", "988888888", passwordEncoder.encode("123456"));
-            User u2 = new User(null, "Maria", "maria@email.com", "977777777", passwordEncoder.encode("123456"));
+            User u1 = new User(null, "Caio Amorim", "caio@email.com", "988888888", passwordEncoder.encode("123456"), Role.ROLE_ADMIN);
+            User u2 = new User(null, "Maria", "maria@email.com", "977777777", passwordEncoder.encode("123456"), Role.ROLE_USER);
             userRepository.saveAll(List.of(u1, u2));
 
             Order o1 = new Order(null, Instant.parse("2019-06-20T19:53:07Z"), OrderStatus.PAID, u1);

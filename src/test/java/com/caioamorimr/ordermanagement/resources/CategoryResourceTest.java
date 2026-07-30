@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.CategoryDTO;
 import com.caioamorimr.ordermanagement.security.JwtUtil;
+import com.caioamorimr.ordermanagement.security.SecurityConfig;
 import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.CategoryService;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
@@ -11,15 +12,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static com.caioamorimr.ordermanagement.util.AuthTestUtils.asAdmin;
+import static com.caioamorimr.ordermanagement.util.AuthTestUtils.asRegularUser;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
@@ -34,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CategoryResource.class)
+@Import(SecurityConfig.class)
 class CategoryResourceTest {
 
     @Autowired
@@ -60,59 +64,67 @@ class CategoryResourceTest {
     }
 
     @Test
-    @WithMockUser
-    @DisplayName("GET /categories should return 200 with paginated list")
+    @DisplayName("GET /categories should return 200 with paginated list for any authenticated user")
     void findAll_shouldReturn200() throws Exception {
         when(categoryService.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(categoryDTO)));
 
-        mockMvc.perform(get("/categories"))
+        mockMvc.perform(get("/categories").with(asRegularUser(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
-    @WithMockUser
     @DisplayName("GET /categories/{id} should return 200 when category exists")
     void findById_shouldReturn200_whenCategoryExists() throws Exception {
         when(categoryService.findById(1L)).thenReturn(categoryDTO);
 
-        mockMvc.perform(get("/categories/1"))
+        mockMvc.perform(get("/categories/1").with(asRegularUser(1L)))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser
     @DisplayName("GET /categories/{id} should return 404 when category does not exist")
     void findById_shouldReturn404_whenCategoryNotFound() throws Exception {
         when(categoryService.findById(99L)).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(get("/categories/99"))
+        mockMvc.perform(get("/categories/99").with(asRegularUser(1L)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource Not Found"));
     }
 
     @Test
-    @WithMockUser
-    @DisplayName("POST /categories should return 201 when payload is valid")
+    @DisplayName("POST /categories should return 201 when caller is admin and payload is valid")
     void insert_shouldReturn201_whenPayloadIsValid() throws Exception {
         when(categoryService.insert(any(CategoryDTO.class))).thenReturn(categoryDTO);
 
         mockMvc.perform(post("/categories")
                         .with(csrf())
+                        .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isCreated());
     }
 
     @Test
-    @WithMockUser
+    @DisplayName("POST /categories should return 403 when caller is not admin")
+    void insert_shouldReturn403_whenNotAdmin() throws Exception {
+        mockMvc.perform(post("/categories")
+                        .with(csrf())
+                        .with(asRegularUser(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(categoryDTO)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("POST /categories should return 422 when name is blank")
     void insert_shouldReturn422_whenNameIsBlank() throws Exception {
         categoryDTO.setName("");
 
         mockMvc.perform(post("/categories")
                         .with(csrf())
+                        .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isUnprocessableEntity())
@@ -120,48 +132,64 @@ class CategoryResourceTest {
     }
 
     @Test
-    @WithMockUser
-    @DisplayName("PUT /categories/{id} should return 200 when payload is valid")
+    @DisplayName("PUT /categories/{id} should return 200 when caller is admin and payload is valid")
     void update_shouldReturn200_whenPayloadIsValid() throws Exception {
         when(categoryService.update(anyLong(), any(CategoryDTO.class))).thenReturn(categoryDTO);
 
         mockMvc.perform(put("/categories/1")
                         .with(csrf())
+                        .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser
+    @DisplayName("PUT /categories/{id} should return 403 when caller is not admin")
+    void update_shouldReturn403_whenNotAdmin() throws Exception {
+        mockMvc.perform(put("/categories/1")
+                        .with(csrf())
+                        .with(asRegularUser(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(categoryDTO)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("PUT /categories/{id} should return 404 when category does not exist")
     void update_shouldReturn404_whenCategoryNotFound() throws Exception {
         when(categoryService.update(anyLong(), any(CategoryDTO.class))).thenThrow(new ResourceNotFoundException(99L));
 
         mockMvc.perform(put("/categories/99")
                         .with(csrf())
+                        .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser
-    @DisplayName("DELETE /categories/{id} should return 204 when category exists")
+    @DisplayName("DELETE /categories/{id} should return 204 when caller is admin and category exists")
     void delete_shouldReturn204_whenCategoryExists() throws Exception {
         doNothing().when(categoryService).delete(1L);
 
-        mockMvc.perform(delete("/categories/1").with(csrf()))
+        mockMvc.perform(delete("/categories/1").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    @WithMockUser
+    @DisplayName("DELETE /categories/{id} should return 403 when caller is not admin")
+    void delete_shouldReturn403_whenNotAdmin() throws Exception {
+        mockMvc.perform(delete("/categories/1").with(csrf()).with(asRegularUser(1L)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("DELETE /categories/{id} should return 404 when category does not exist")
     void delete_shouldReturn404_whenCategoryNotFound() throws Exception {
         doThrow(new ResourceNotFoundException(99L)).when(categoryService).delete(99L);
 
-        mockMvc.perform(delete("/categories/99").with(csrf()))
+        mockMvc.perform(delete("/categories/99").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNotFound());
     }
 }

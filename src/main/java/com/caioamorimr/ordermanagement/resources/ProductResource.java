@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +40,7 @@ public class ProductResource {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductDTO> insert(@Valid @RequestBody ProductRequestDTO dto) {
         ProductDTO created = productService.insert(dto);
@@ -50,22 +52,26 @@ public class ProductResource {
         return ResponseEntity.created(uri).body(created);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<ProductDTO> update(@PathVariable Long id, @Valid @RequestBody ProductRequestDTO dto) {
         return ResponseEntity.ok(productService.update(id, dto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{productId}/categories/{categoryId}")
     public ResponseEntity<ProductDTO> addCategory(@PathVariable Long productId, @PathVariable Long categoryId) {
         return ResponseEntity.ok(productService.addCategory(productId, categoryId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/{productId}/categories/{categoryId}")
     public ResponseEntity<Void> removeCategory(@PathVariable Long productId, @PathVariable Long categoryId) {
         productService.removeCategory(productId, categoryId);
