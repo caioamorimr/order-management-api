@@ -11,12 +11,14 @@ import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
 import com.caioamorimr.ordermanagement.repositories.ProductRepository;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidOrderStatusTransitionException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -101,7 +103,6 @@ class OrderServiceTest {
     void insert_shouldPersistOrderAndReturnOrderDTO() {
         OrderInsertDTO dto = new OrderInsertDTO();
         dto.setMoment(Instant.now());
-        dto.setOrderStatus(OrderStatus.WAITING_PAYMENT);
         dto.setClientId(1L);
         OrderItemInsertDTO itemDto = new OrderItemInsertDTO();
         itemDto.setProductId(1L);
@@ -115,7 +116,10 @@ class OrderServiceTest {
         OrderDTO result = orderService.insert(dto);
 
         assertThat(result.getId()).isEqualTo(1L);
-        verify(orderRepository).save(any(Order.class));
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getOrderStatus()).isEqualTo(OrderStatus.WAITING_PAYMENT);
     }
 
     @Test
@@ -148,6 +152,41 @@ class OrderServiceTest {
         OrderUpdateDTO dto = new OrderUpdateDTO();
         dto.setMoment(Instant.now());
         dto.setOrderStatus(OrderStatus.PAID);
+
+        when(orderRepository.getReferenceById(1L)).thenReturn(order);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        OrderDTO result = orderService.update(1L, dto);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @DisplayName("update should throw InvalidOrderStatusTransitionException and not persist when the transition is illegal")
+    void update_shouldThrowInvalidOrderStatusTransitionException_whenTransitionIsIllegal() {
+        //order fixture starts at WAITING_PAYMENT; jumping straight to DELIVERED skips
+        //PAID and SHIPPED, so it must be rejected.
+        OrderUpdateDTO dto = new OrderUpdateDTO();
+        dto.setMoment(Instant.now());
+        dto.setOrderStatus(OrderStatus.DELIVERED);
+
+        when(orderRepository.getReferenceById(1L)).thenReturn(order);
+
+        assertThatThrownBy(() -> orderService.update(1L, dto))
+                .isInstanceOf(InvalidOrderStatusTransitionException.class)
+                .hasMessageContaining("WAITING_PAYMENT")
+                .hasMessageContaining("DELIVERED");
+
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("update should allow re-saving the same status as a no-op transition")
+    void update_shouldAllowSameStatus_asNoOpTransition() {
+        OrderUpdateDTO dto = new OrderUpdateDTO();
+        dto.setMoment(Instant.now());
+        dto.setOrderStatus(OrderStatus.WAITING_PAYMENT);
 
         when(orderRepository.getReferenceById(1L)).thenReturn(order);
         when(orderRepository.save(any(Order.class))).thenReturn(order);

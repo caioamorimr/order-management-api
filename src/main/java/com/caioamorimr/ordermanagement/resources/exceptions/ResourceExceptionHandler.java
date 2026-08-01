@@ -1,6 +1,7 @@
 package com.caioamorimr.ordermanagement.resources.exceptions;
 
 import com.caioamorimr.ordermanagement.services.exceptions.DatabaseException;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidOrderStatusTransitionException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourcesNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,15 @@ public class ResourceExceptionHandler {
         HttpStatus status = HttpStatus.CONFLICT;
         StandardError err = new StandardError(
                 Instant.now(), status.value(), "Data Integrity Violation", "A record with this data already exists (e.g. duplicate email)", request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(InvalidOrderStatusTransitionException.class)
+    public ResponseEntity<StandardError> invalidOrderStatusTransition(InvalidOrderStatusTransitionException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        StandardError err = new StandardError(
+                Instant.now(), status.value(), "Invalid Order Status Transition", e.getMessage(), request.getRequestURI()
         );
         return ResponseEntity.status(status).body(err);
     }

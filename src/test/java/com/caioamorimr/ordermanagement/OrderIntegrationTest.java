@@ -5,6 +5,7 @@ import com.caioamorimr.ordermanagement.dto.LoginRequest;
 import com.caioamorimr.ordermanagement.dto.OrderDTO;
 import com.caioamorimr.ordermanagement.dto.OrderInsertDTO;
 import com.caioamorimr.ordermanagement.dto.OrderItemInsertDTO;
+import com.caioamorimr.ordermanagement.dto.OrderUpdateDTO;
 import com.caioamorimr.ordermanagement.dto.ProductDTO;
 import com.caioamorimr.ordermanagement.dto.ProductRequestDTO;
 import com.caioamorimr.ordermanagement.dto.TokenResponse;
@@ -30,6 +31,7 @@ import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,7 +138,6 @@ class OrderIntegrationTest {
 
         OrderInsertDTO orderDTO = new OrderInsertDTO();
         orderDTO.setMoment(Instant.now());
-        orderDTO.setOrderStatus(OrderStatus.WAITING_PAYMENT);
         orderDTO.setClientId(userId);
         orderDTO.setItems(List.of(item));
 
@@ -155,6 +156,93 @@ class OrderIntegrationTest {
                 .andExpect(jsonPath("$.id").value(orderId))
                 .andExpect(jsonPath("$.client.id").value(userId))
                 .andExpect(jsonPath("$.items[0].product.id").value(productId))
-                .andExpect(jsonPath("$.items[0].quantity").value(2));
+                .andExpect(jsonPath("$.items[0].quantity").value(2))
+                .andExpect(jsonPath("$.orderStatus").value("WAITING_PAYMENT"));
+    }
+
+    @Test
+    @DisplayName("Integration test: order status only moves through legal transitions")
+    void updateOrderStatus_shouldEnforceStateMachine() throws Exception {
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setName("State Machine Test Category");
+
+        String categoryResponse = mockMvc.perform(post("/categories")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(categoryDTO)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long categoryId = objectMapper.readValue(categoryResponse, CategoryDTO.class).getId();
+
+        ProductRequestDTO productDTO = new ProductRequestDTO();
+        productDTO.setName("State Machine Test Product");
+        productDTO.setDescription("Test product description");
+        productDTO.setPrice(BigDecimal.valueOf(100.00));
+        productDTO.setCategoryIds(Set.of(categoryId));
+
+        String productResponse = mockMvc.perform(post("/products")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productDTO)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long productId = objectMapper.readValue(productResponse, ProductDTO.class).getId();
+
+        UserInsertDTO userDTO = new UserInsertDTO();
+        userDTO.setName("State Machine Test User");
+        userDTO.setEmail("state-machine-test@example.com");
+        userDTO.setPhone("123456789");
+        userDTO.setPassword("password123");
+
+        String userResponse = mockMvc.perform(post("/users")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDTO)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long userId = objectMapper.readValue(userResponse, UserDTO.class).getId();
+
+        OrderItemInsertDTO item = new OrderItemInsertDTO();
+        item.setProductId(productId);
+        item.setQuantity(1);
+
+        OrderInsertDTO orderDTO = new OrderInsertDTO();
+        orderDTO.setMoment(Instant.now());
+        orderDTO.setClientId(userId);
+        orderDTO.setItems(List.of(item));
+
+        String orderResponse = mockMvc.perform(post("/orders")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderDTO)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long orderId = objectMapper.readValue(orderResponse, OrderDTO.class).getId();
+
+        OrderUpdateDTO toPaid = new OrderUpdateDTO();
+        toPaid.setMoment(Instant.now());
+        toPaid.setOrderStatus(OrderStatus.PAID);
+
+        mockMvc.perform(put("/orders/" + orderId)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(toPaid)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderStatus").value("PAID"));
+
+        OrderUpdateDTO backToWaitingPayment = new OrderUpdateDTO();
+        backToWaitingPayment.setMoment(Instant.now());
+        backToWaitingPayment.setOrderStatus(OrderStatus.WAITING_PAYMENT);
+
+        mockMvc.perform(put("/orders/" + orderId)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(backToWaitingPayment)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Invalid Order Status Transition"));
     }
 }

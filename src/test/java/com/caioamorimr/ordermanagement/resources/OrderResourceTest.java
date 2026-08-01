@@ -10,6 +10,7 @@ import com.caioamorimr.ordermanagement.security.OrderSecurity;
 import com.caioamorimr.ordermanagement.security.SecurityConfig;
 import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
 import com.caioamorimr.ordermanagement.services.OrderService;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidOrderStatusTransitionException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,6 @@ class OrderResourceTest {
 
         insertDTO = new OrderInsertDTO();
         insertDTO.setMoment(Instant.now());
-        insertDTO.setOrderStatus(OrderStatus.WAITING_PAYMENT);
         insertDTO.setClientId(1L);
         OrderItemInsertDTO item = new OrderItemInsertDTO();
         item.setProductId(1L);
@@ -229,6 +229,21 @@ class OrderResourceTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /orders/{id} should return 409 when the requested status transition is illegal")
+    void update_shouldReturn409_whenTransitionIsInvalid() throws Exception {
+        when(orderService.update(anyLong(), any(OrderUpdateDTO.class)))
+                .thenThrow(new InvalidOrderStatusTransitionException(OrderStatus.WAITING_PAYMENT, OrderStatus.DELIVERED));
+
+        mockMvc.perform(put("/orders/1")
+                        .with(csrf())
+                        .with(asAdmin(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Invalid Order Status Transition"));
     }
 
     @Test

@@ -8,10 +8,12 @@ import com.caioamorimr.ordermanagement.entities.Order;
 import com.caioamorimr.ordermanagement.entities.OrderItem;
 import com.caioamorimr.ordermanagement.entities.Product;
 import com.caioamorimr.ordermanagement.entities.User;
+import com.caioamorimr.ordermanagement.entities.enums.OrderStatus;
 import com.caioamorimr.ordermanagement.repositories.OrderRepository;
 import com.caioamorimr.ordermanagement.repositories.ProductRepository;
 import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import com.caioamorimr.ordermanagement.services.exceptions.DatabaseException;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidOrderStatusTransitionException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -54,7 +56,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setMoment(dto.getMoment() != null ? dto.getMoment() : Instant.now());
-        order.setOrderStatus(dto.getOrderStatus());
+        order.setOrderStatus(OrderStatus.WAITING_PAYMENT);
         order.setClient(client);
 
         for (OrderItemInsertDTO itemDto : dto.getItems()) {
@@ -83,8 +85,13 @@ public class OrderService {
     public OrderDTO update(Long id, OrderUpdateDTO dto) {
         try {
             Order entity = orderRepository.getReferenceById(id);
+            OrderStatus currentStatus = entity.getOrderStatus();
+            OrderStatus newStatus = dto.getOrderStatus();
+            if (!currentStatus.canTransitionTo(newStatus)) {
+                throw new InvalidOrderStatusTransitionException(currentStatus, newStatus);
+            }
             entity.setMoment(dto.getMoment());
-            entity.setOrderStatus(dto.getOrderStatus());
+            entity.setOrderStatus(newStatus);
             return new OrderDTO(orderRepository.save(entity));
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException(id);
