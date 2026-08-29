@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -101,5 +102,30 @@ class LoginRateLimitFilterTest {
 
         verify(filterChain, times(10)).doFilter(any(ServletRequest.class), any(ServletResponse.class));
         verify(response, never()).setStatus(LoginRateLimitFilter.SC_TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    @DisplayName("should evict windows that fell outside the rate-limit window")
+    void evictExpiredEntries_shouldRemoveStaleWindows() {
+        long staleStart = System.currentTimeMillis() - Duration.ofMinutes(2).toMillis();
+        filter.seedWindowForTesting("10.0.0.9", new LoginRateLimitFilter.AttemptWindow(staleStart));
+
+        assertThat(filter.trackedIpCount()).isEqualTo(1);
+
+        filter.evictExpiredEntries();
+
+        assertThat(filter.trackedIpCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("should keep windows that are still within the rate-limit window")
+    void evictExpiredEntries_shouldKeepFreshWindows() throws Exception {
+        filter.doFilter(loginRequestFrom("10.0.0.10"), response, filterChain);
+
+        assertThat(filter.trackedIpCount()).isEqualTo(1);
+
+        filter.evictExpiredEntries();
+
+        assertThat(filter.trackedIpCount()).isEqualTo(1);
     }
 }
