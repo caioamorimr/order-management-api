@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Optional;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -23,8 +25,11 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final Optional<LoginRateLimitFilter> loginRateLimitFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, Optional<LoginRateLimitFilter> loginRateLimitFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.loginRateLimitFilter = loginRateLimitFilter;
     }
 
     @Bean
@@ -43,6 +48,8 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/auth/login",
                                         "/auth/register",
+                                        "/auth/refresh",
+                                        "/auth/logout",
                                         "/v3/api-docs/**",
                                         "/swagger-ui/**",
                                         "/swagger-ui.html",
@@ -57,6 +64,8 @@ public class SecurityConfig {
                                 (req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
                         )
                 );
+
+        loginRateLimitFilter.ifPresent(filter -> http.addFilterBefore(filter, JwtAuthenticationFilter.class));
 
         return http.build();
     }

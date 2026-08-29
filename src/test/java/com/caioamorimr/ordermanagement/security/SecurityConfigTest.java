@@ -1,5 +1,7 @@
 package com.caioamorimr.ordermanagement.security;
 
+import com.caioamorimr.ordermanagement.dto.TokenResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ class SecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
     @DisplayName("Protected endpoints should return 401 for unauthenticated requests")
     void protectedEndpoints_shouldReturn401_whenNotAuthenticated() throws Exception {
@@ -38,10 +43,13 @@ class SecurityConfigTest {
         String loginBody = """
                 {"email": "caio@email.com", "password": "123456"}
                 """;
-        mockMvc.perform(post("/auth/login")
+        String loginResponse = mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String refreshToken = objectMapper.readValue(loginResponse, TokenResponse.class).refreshToken();
 
         String registerBody = """
                 {"name": "New User", "email": "new-user-%d@email.com", "phone": "999999999", "password": "123456"}
@@ -50,5 +58,24 @@ class SecurityConfigTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerBody))
                 .andExpect(status().isCreated());
+
+        String refreshRequestBody = """
+                {"refreshToken": "%s"}
+                """.formatted(refreshToken);
+        String refreshResponse = mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(refreshRequestBody))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String rotatedRefreshToken = objectMapper.readValue(refreshResponse, TokenResponse.class).refreshToken();
+
+        String logoutRequestBody = """
+                {"refreshToken": "%s"}
+                """.formatted(rotatedRefreshToken);
+        mockMvc.perform(post("/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(logoutRequestBody))
+                .andExpect(status().isNoContent());
     }
 }

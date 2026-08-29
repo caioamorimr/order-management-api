@@ -1,12 +1,17 @@
 package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.LoginRequest;
+import com.caioamorimr.ordermanagement.dto.RefreshTokenRequest;
 import com.caioamorimr.ordermanagement.dto.UserDTO;
 import com.caioamorimr.ordermanagement.dto.UserInsertDTO;
+import com.caioamorimr.ordermanagement.entities.User;
+import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import com.caioamorimr.ordermanagement.security.JwtUtil;
 import com.caioamorimr.ordermanagement.security.SecurityConfig;
 import com.caioamorimr.ordermanagement.security.UserDetailsServiceImpl;
+import com.caioamorimr.ordermanagement.services.RefreshTokenService;
 import com.caioamorimr.ordermanagement.services.UserService;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidRefreshTokenException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +27,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -53,8 +60,15 @@ class AuthControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
+
     private LoginRequest loginRequest;
     private UserInsertDTO registerDTO;
+    private User user;
 
     @BeforeEach
     void setUp() {
@@ -65,10 +79,12 @@ class AuthControllerTest {
         registerDTO.setEmail("caio@email.com");
         registerDTO.setPhone("988888888");
         registerDTO.setPassword("123456");
+
+        user = new User(1L, "Caio", "caio@email.com", "988888888", "hashed_password");
     }
 
     @Test
-    @DisplayName("POST /auth/login should return 200 with a token when credentials are valid")
+    @DisplayName("POST /auth/login should return 200 with an access token and a refresh token when credentials are valid")
     void login_shouldReturn200_whenCredentialsAreValid() throws Exception {
         UserDetails userDetails = mock(UserDetails.class);
         when(userDetails.getUsername()).thenReturn("caio@email.com");
@@ -78,6 +94,8 @@ class AuthControllerTest {
 
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(jwtUtil.generateToken("caio@email.com")).thenReturn("fake-jwt-token");
+        when(userRepository.findByEmail("caio@email.com")).thenReturn(Optional.of(user));
+        when(refreshTokenService.issue(user)).thenReturn("fake-refresh-token");
 
         mockMvc.perform(post("/auth/login")
                         .with(csrf())
@@ -85,7 +103,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("fake-jwt-token"))
-                .andExpect(jsonPath("$.type").value("Bearer"));
+                .andExpect(jsonPath("$.type").value("Bearer"))
+                .andExpect(jsonPath("$.refreshToken").value("fake-refresh-token"));
     }
 
     @Test
@@ -150,5 +169,63 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Data Integrity Violation"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/refresh should return 200 with a new token pair without requiring authentication")
+    void refresh_shouldReturn200_whenRefreshTokenIsValid() throws Exception {
+        when(refreshTokenService.rotate("old-refresh-token"))
+                .thenReturn(new RefreshTokenService.RotationResult(user, "new-refresh-token"));
+        when(jwtUtil.generateToken("caio@email.com")).thenReturn("new-jwt-token");
+
+        RefreshTokenRequest dto = new RefreshTokenRequest("old-refresh-token");
+
+        mockMvc.perform(post("/auth/refresh")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("new-jwt-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/refresh should return 401 when the refresh token is invalid, expired, or already used")
+    void refresh_shouldReturn401_whenRefreshTokenIsInvalid() throws Exception {
+        when(refreshTokenService.rotate("bad-token")).thenThrow(new InvalidRefreshTokenException());
+
+        RefreshTokenRequest dto = new RefreshTokenRequest("bad-token");
+
+        mockMvc.perform(post("/auth/refresh")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid Refresh Token"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/refresh should return 422 when refreshToken is blank")
+    void refresh_shouldReturn422_whenRefreshTokenIsBlank() throws Exception {
+        RefreshTokenRequest dto = new RefreshTokenRequest("");
+
+        mockMvc.perform(post("/auth/refresh")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors[0].fieldName").value("refreshToken"));
+    }
+
+    @Test
+    @DisplayName("POST /auth/logout should return 204 without requiring authentication")
+    void logout_shouldReturn204() throws Exception {
+        RefreshTokenRequest dto = new RefreshTokenRequest("some-refresh-token");
+
+        mockMvc.perform(post("/auth/logout")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
     }
 }

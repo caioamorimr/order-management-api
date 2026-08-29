@@ -2,6 +2,7 @@ package com.caioamorimr.ordermanagement.resources.exceptions;
 
 import com.caioamorimr.ordermanagement.services.exceptions.DatabaseException;
 import com.caioamorimr.ordermanagement.services.exceptions.InvalidOrderStatusTransitionException;
+import com.caioamorimr.ordermanagement.services.exceptions.InvalidRefreshTokenException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourceNotFoundException;
 import com.caioamorimr.ordermanagement.services.exceptions.ResourcesNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -80,6 +81,15 @@ public class ResourceExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Void> handleBadCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<StandardError> invalidRefreshToken(InvalidRefreshTokenException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        StandardError err = new StandardError(
+                Instant.now(), status.value(), "Invalid Refresh Token", e.getMessage(), request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(err);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

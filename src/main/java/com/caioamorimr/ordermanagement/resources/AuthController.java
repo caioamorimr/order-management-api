@@ -1,10 +1,14 @@
 package com.caioamorimr.ordermanagement.resources;
 
 import com.caioamorimr.ordermanagement.dto.LoginRequest;
+import com.caioamorimr.ordermanagement.dto.RefreshTokenRequest;
 import com.caioamorimr.ordermanagement.dto.TokenResponse;
 import com.caioamorimr.ordermanagement.dto.UserDTO;
 import com.caioamorimr.ordermanagement.dto.UserInsertDTO;
+import com.caioamorimr.ordermanagement.entities.User;
+import com.caioamorimr.ordermanagement.repositories.UserRepository;
 import com.caioamorimr.ordermanagement.security.JwtUtil;
+import com.caioamorimr.ordermanagement.services.RefreshTokenService;
 import com.caioamorimr.ordermanagement.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +34,17 @@ public class AuthController {
 
     private final UserService userService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserService userService) {
+    private final UserRepository userRepository;
+
+    private final RefreshTokenService refreshTokenService;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserService userService,
+                          UserRepository userRepository, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.userRepository = userRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/login")
@@ -45,7 +56,24 @@ public class AuthController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
-        return ResponseEntity.ok(new TokenResponse(jwt));
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + userDetails.getUsername()));
+        String refreshToken = refreshTokenService.issue(user);
+
+        return ResponseEntity.ok(new TokenResponse(jwt, refreshToken));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest dto) {
+        RefreshTokenService.RotationResult result = refreshTokenService.rotate(dto.refreshToken());
+        String newJwt = jwtUtil.generateToken(result.user().getEmail());
+        return ResponseEntity.ok(new TokenResponse(newJwt, result.newRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest dto) {
+        refreshTokenService.revoke(dto.refreshToken());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/register")
