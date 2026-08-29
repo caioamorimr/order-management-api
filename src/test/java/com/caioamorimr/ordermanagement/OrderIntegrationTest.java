@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Transactional
-class clOrderIntegrationTest {
+class OrderIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -70,7 +70,7 @@ class clOrderIntegrationTest {
         CategoryDTO categoryDTO = new CategoryDTO();
         categoryDTO.setName("Integration Test Category");
 
-        String response = mockMvc.perform(post("/categories")
+        String response = mockMvc.perform(post("/api/v1/categories")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
@@ -80,7 +80,7 @@ class clOrderIntegrationTest {
         CategoryDTO created = objectMapper.readValue(response, CategoryDTO.class);
         Long id = created.getId();
 
-        mockMvc.perform(get("/categories/" + id)
+        mockMvc.perform(get("/api/v1/categories/" + id)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Integration Test Category"));
@@ -93,7 +93,7 @@ class clOrderIntegrationTest {
         CategoryDTO categoryDTO = new CategoryDTO();
         categoryDTO.setName("Integration Test Category");
 
-        String categoryResponse = mockMvc.perform(post("/categories")
+        String categoryResponse = mockMvc.perform(post("/api/v1/categories")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
@@ -108,7 +108,7 @@ class clOrderIntegrationTest {
         productDTO.setPrice(BigDecimal.valueOf(100.00));
         productDTO.setCategoryIds(Set.of(categoryId));
 
-        String productResponse = mockMvc.perform(post("/products")
+        String productResponse = mockMvc.perform(post("/api/v1/products")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productDTO)))
@@ -123,7 +123,7 @@ class clOrderIntegrationTest {
         userDTO.setPhone("123456789");
         userDTO.setPassword("password123");
 
-        String userResponse = mockMvc.perform(post("/users")
+        String userResponse = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTO)))
@@ -141,7 +141,7 @@ class clOrderIntegrationTest {
         orderDTO.setClientId(userId);
         orderDTO.setItems(List.of(item));
 
-        String orderResponse = mockMvc.perform(post("/orders")
+        String orderResponse = mockMvc.perform(post("/api/v1/orders")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderDTO)))
@@ -150,7 +150,7 @@ class clOrderIntegrationTest {
 
         Long orderId = objectMapper.readValue(orderResponse, OrderDTO.class).getId();
 
-        mockMvc.perform(get("/orders/" + orderId)
+        mockMvc.perform(get("/api/v1/orders/" + orderId)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(orderId))
@@ -166,7 +166,7 @@ class clOrderIntegrationTest {
         CategoryDTO categoryDTO = new CategoryDTO();
         categoryDTO.setName("State Machine Test Category");
 
-        String categoryResponse = mockMvc.perform(post("/categories")
+        String categoryResponse = mockMvc.perform(post("/api/v1/categories")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
@@ -181,7 +181,7 @@ class clOrderIntegrationTest {
         productDTO.setPrice(BigDecimal.valueOf(100.00));
         productDTO.setCategoryIds(Set.of(categoryId));
 
-        String productResponse = mockMvc.perform(post("/products")
+        String productResponse = mockMvc.perform(post("/api/v1/products")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productDTO)))
@@ -196,7 +196,7 @@ class clOrderIntegrationTest {
         userDTO.setPhone("123456789");
         userDTO.setPassword("password123");
 
-        String userResponse = mockMvc.perform(post("/users")
+        String userResponse = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTO)))
@@ -214,7 +214,7 @@ class clOrderIntegrationTest {
         orderDTO.setClientId(userId);
         orderDTO.setItems(List.of(item));
 
-        String orderResponse = mockMvc.perform(post("/orders")
+        String orderResponse = mockMvc.perform(post("/api/v1/orders")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderDTO)))
@@ -227,7 +227,7 @@ class clOrderIntegrationTest {
         toPaid.setMoment(Instant.now());
         toPaid.setOrderStatus(OrderStatus.PAID);
 
-        mockMvc.perform(put("/orders/" + orderId)
+        mockMvc.perform(put("/api/v1/orders/" + orderId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(toPaid)))
@@ -238,7 +238,7 @@ class clOrderIntegrationTest {
         backToWaitingPayment.setMoment(Instant.now());
         backToWaitingPayment.setOrderStatus(OrderStatus.WAITING_PAYMENT);
 
-        mockMvc.perform(put("/orders/" + orderId)
+        mockMvc.perform(put("/api/v1/orders/" + orderId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(backToWaitingPayment)))

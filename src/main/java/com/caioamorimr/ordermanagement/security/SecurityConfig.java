@@ -55,6 +55,8 @@ public class SecurityConfig {
                                         "/swagger-ui.html",
                                         "/h2-console/**"
                                 ).permitAll()
+                                .requestMatchers("/actuator/health").permitAll()
+                                .requestMatchers("/actuator/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))

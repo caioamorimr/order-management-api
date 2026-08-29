@@ -22,7 +22,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping(value = "/orders")
+@RequestMapping(value = "/api/v1/orders")
 public class OrderResource {
 
     private final OrderService orderService;

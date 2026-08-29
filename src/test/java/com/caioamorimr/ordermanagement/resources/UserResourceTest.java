@@ -88,7 +88,7 @@ class UserResourceTest {
         when(userService.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(userDTO)));
 
-        mockMvc.perform(get("/users").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/users").with(asAdmin(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
@@ -96,7 +96,7 @@ class UserResourceTest {
     @Test
     @DisplayName("GET /users should return 403 when caller is not admin")
     void findAll_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(get("/users").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/users").with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -105,7 +105,7 @@ class UserResourceTest {
     void findById_shouldReturn200_whenUserExists() throws Exception {
         when(userService.findById(1L)).thenReturn(userDTO);
 
-        mockMvc.perform(get("/users/1").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/users/1").with(asAdmin(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -115,7 +115,7 @@ class UserResourceTest {
         when(userService.findById(1L)).thenReturn(userDTO);
         when(userSecurity.isSelf(eq(1L), any())).thenReturn(true);
 
-        mockMvc.perform(get("/users/1").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/users/1").with(asRegularUser(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -124,7 +124,7 @@ class UserResourceTest {
     void findById_shouldReturn403_whenAccessingAnotherUser() throws Exception {
         when(userSecurity.isSelf(eq(2L), any())).thenReturn(false);
 
-        mockMvc.perform(get("/users/2").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/users/2").with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -133,7 +133,7 @@ class UserResourceTest {
     void findById_shouldReturn404_whenUserNotFound() throws Exception {
         when(userService.findById(99L)).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(get("/users/99").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/users/99").with(asAdmin(1L)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource Not Found"));
     }
@@ -143,7 +143,7 @@ class UserResourceTest {
     void insert_shouldReturn201_whenPayloadIsValid() throws Exception {
         when(userService.insert(any(UserInsertDTO.class))).thenReturn(userDTO);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -154,7 +154,7 @@ class UserResourceTest {
     @Test
     @DisplayName("POST /users should return 403 when caller is not admin")
     void insert_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -167,7 +167,7 @@ class UserResourceTest {
     void insert_shouldReturn422_whenNameIsBlank() throws Exception {
         insertDTO.setName("");
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +181,7 @@ class UserResourceTest {
     void insert_shouldReturn422_whenEmailIsInvalid() throws Exception {
         insertDTO.setEmail("not-an-email");
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +195,7 @@ class UserResourceTest {
     void update_shouldReturn200_whenPayloadIsValid() throws Exception {
         when(userService.update(anyLong(), any(UserUpdateDTO.class))).thenReturn(userDTO);
 
-        mockMvc.perform(put("/users/1")
+        mockMvc.perform(put("/api/v1/users/1")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -209,7 +209,7 @@ class UserResourceTest {
         when(userService.update(anyLong(), any(UserUpdateDTO.class))).thenReturn(userDTO);
         when(userSecurity.isSelf(eq(1L), any())).thenReturn(true);
 
-        mockMvc.perform(put("/users/1")
+        mockMvc.perform(put("/api/v1/users/1")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -222,7 +222,7 @@ class UserResourceTest {
     void update_shouldReturn403_whenUpdatingAnotherUser() throws Exception {
         when(userSecurity.isSelf(eq(2L), any())).thenReturn(false);
 
-        mockMvc.perform(put("/users/2")
+        mockMvc.perform(put("/api/v1/users/2")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -235,7 +235,7 @@ class UserResourceTest {
     void update_shouldReturn404_whenUserNotFound() throws Exception {
         when(userService.update(anyLong(), any(UserUpdateDTO.class))).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(put("/users/99")
+        mockMvc.perform(put("/api/v1/users/99")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -248,14 +248,14 @@ class UserResourceTest {
     void delete_shouldReturn204_whenUserExists() throws Exception {
         doNothing().when(userService).delete(1L);
 
-        mockMvc.perform(delete("/users/1").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/users/1").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE /users/{id} should return 403 when caller is not admin")
     void delete_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(delete("/users/1").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(delete("/api/v1/users/1").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -264,7 +264,7 @@ class UserResourceTest {
     void delete_shouldReturn404_whenUserNotFound() throws Exception {
         doThrow(new ResourceNotFoundException(99L)).when(userService).delete(99L);
 
-        mockMvc.perform(delete("/users/99").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/users/99").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNotFound());
     }
 }

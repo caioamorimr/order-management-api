@@ -69,7 +69,7 @@ class CategoryResourceTest {
         when(categoryService.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(categoryDTO)));
 
-        mockMvc.perform(get("/categories").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/categories").with(asRegularUser(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
@@ -79,7 +79,7 @@ class CategoryResourceTest {
     void findById_shouldReturn200_whenCategoryExists() throws Exception {
         when(categoryService.findById(1L)).thenReturn(categoryDTO);
 
-        mockMvc.perform(get("/categories/1").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/categories/1").with(asRegularUser(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -88,7 +88,7 @@ class CategoryResourceTest {
     void findById_shouldReturn404_whenCategoryNotFound() throws Exception {
         when(categoryService.findById(99L)).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(get("/categories/99").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/categories/99").with(asRegularUser(1L)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource Not Found"));
     }
@@ -98,7 +98,7 @@ class CategoryResourceTest {
     void insert_shouldReturn201_whenPayloadIsValid() throws Exception {
         when(categoryService.insert(any(CategoryDTO.class))).thenReturn(categoryDTO);
 
-        mockMvc.perform(post("/categories")
+        mockMvc.perform(post("/api/v1/categories")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ class CategoryResourceTest {
     @Test
     @DisplayName("POST /categories should return 403 when caller is not admin")
     void insert_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(post("/categories")
+        mockMvc.perform(post("/api/v1/categories")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -122,7 +122,7 @@ class CategoryResourceTest {
     void insert_shouldReturn422_whenNameIsBlank() throws Exception {
         categoryDTO.setName("");
 
-        mockMvc.perform(post("/categories")
+        mockMvc.perform(post("/api/v1/categories")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +136,7 @@ class CategoryResourceTest {
     void update_shouldReturn200_whenPayloadIsValid() throws Exception {
         when(categoryService.update(anyLong(), any(CategoryDTO.class))).thenReturn(categoryDTO);
 
-        mockMvc.perform(put("/categories/1")
+        mockMvc.perform(put("/api/v1/categories/1")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +147,7 @@ class CategoryResourceTest {
     @Test
     @DisplayName("PUT /categories/{id} should return 403 when caller is not admin")
     void update_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(put("/categories/1")
+        mockMvc.perform(put("/api/v1/categories/1")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -160,7 +160,7 @@ class CategoryResourceTest {
     void update_shouldReturn404_whenCategoryNotFound() throws Exception {
         when(categoryService.update(anyLong(), any(CategoryDTO.class))).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(put("/categories/99")
+        mockMvc.perform(put("/api/v1/categories/99")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -173,14 +173,14 @@ class CategoryResourceTest {
     void delete_shouldReturn204_whenCategoryExists() throws Exception {
         doNothing().when(categoryService).delete(1L);
 
-        mockMvc.perform(delete("/categories/1").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/categories/1").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE /categories/{id} should return 403 when caller is not admin")
     void delete_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(delete("/categories/1").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(delete("/api/v1/categories/1").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -189,7 +189,7 @@ class CategoryResourceTest {
     void delete_shouldReturn404_whenCategoryNotFound() throws Exception {
         doThrow(new ResourceNotFoundException(99L)).when(categoryService).delete(99L);
 
-        mockMvc.perform(delete("/categories/99").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/categories/99").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNotFound());
     }
 }

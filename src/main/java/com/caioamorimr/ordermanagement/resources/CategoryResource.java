@@ -20,7 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping(value = "/categories")
+@RequestMapping(value = "/api/v1/categories")
 public class CategoryResource {
 
     private final CategoryService categoryService;

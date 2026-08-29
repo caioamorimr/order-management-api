@@ -93,7 +93,7 @@ class OrderResourceTest {
         when(orderService.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(orderDTO)));
 
-        mockMvc.perform(get("/orders").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/orders").with(asAdmin(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
@@ -101,7 +101,7 @@ class OrderResourceTest {
     @Test
     @DisplayName("GET /orders should return 403 when caller is not admin")
     void findAll_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(get("/orders").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/orders").with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -110,7 +110,7 @@ class OrderResourceTest {
     void findById_shouldReturn200_whenOrderExists() throws Exception {
         when(orderService.findById(1L)).thenReturn(orderDTO);
 
-        mockMvc.perform(get("/orders/1").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/orders/1").with(asAdmin(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -120,7 +120,7 @@ class OrderResourceTest {
         when(orderService.findById(1L)).thenReturn(orderDTO);
         when(orderSecurity.isOwner(eq(1L), any())).thenReturn(true);
 
-        mockMvc.perform(get("/orders/1").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/orders/1").with(asRegularUser(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -129,7 +129,7 @@ class OrderResourceTest {
     void findById_shouldReturn403_whenNotOwnerAndNotAdmin() throws Exception {
         when(orderSecurity.isOwner(eq(1L), any())).thenReturn(false);
 
-        mockMvc.perform(get("/orders/1").with(asRegularUser(2L)))
+        mockMvc.perform(get("/api/v1/orders/1").with(asRegularUser(2L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -138,7 +138,7 @@ class OrderResourceTest {
     void findById_shouldReturn404_whenOrderNotFound() throws Exception {
         when(orderService.findById(99L)).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(get("/orders/99").with(asAdmin(1L)))
+        mockMvc.perform(get("/api/v1/orders/99").with(asAdmin(1L)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource Not Found"));
     }
@@ -148,7 +148,7 @@ class OrderResourceTest {
     void insert_shouldReturn201_whenPayloadIsValid() throws Exception {
         when(orderService.insert(any(OrderInsertDTO.class))).thenReturn(orderDTO);
 
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post("/api/v1/orders")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -159,7 +159,7 @@ class OrderResourceTest {
     @Test
     @DisplayName("POST /orders should return 403 when a regular user tries to place an order for someone else")
     void insert_shouldReturn403_whenClientIdDoesNotMatchCaller() throws Exception {
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post("/api/v1/orders")
                         .with(csrf())
                         .with(asRegularUser(2L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -172,7 +172,7 @@ class OrderResourceTest {
     void insert_shouldReturn201_whenAdminPlacesOrderForAnotherClient() throws Exception {
         when(orderService.insert(any(OrderInsertDTO.class))).thenReturn(orderDTO);
 
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post("/api/v1/orders")
                         .with(csrf())
                         .with(asAdmin(2L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -185,7 +185,7 @@ class OrderResourceTest {
     void insert_shouldReturn422_whenClientIdIsNull() throws Exception {
         insertDTO.setClientId(null);
 
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post("/api/v1/orders")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -199,7 +199,7 @@ class OrderResourceTest {
     void update_shouldReturn200_whenPayloadIsValid() throws Exception {
         when(orderService.update(anyLong(), any(OrderUpdateDTO.class))).thenReturn(orderDTO);
 
-        mockMvc.perform(put("/orders/1")
+        mockMvc.perform(put("/api/v1/orders/1")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -210,7 +210,7 @@ class OrderResourceTest {
     @Test
     @DisplayName("PUT /orders/{id} should return 403 when caller is not admin, even if they own the order")
     void update_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(put("/orders/1")
+        mockMvc.perform(put("/api/v1/orders/1")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -223,7 +223,7 @@ class OrderResourceTest {
     void update_shouldReturn404_whenOrderNotFound() throws Exception {
         when(orderService.update(anyLong(), any(OrderUpdateDTO.class))).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(put("/orders/99")
+        mockMvc.perform(put("/api/v1/orders/99")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -237,7 +237,7 @@ class OrderResourceTest {
         when(orderService.update(anyLong(), any(OrderUpdateDTO.class)))
                 .thenThrow(new InvalidOrderStatusTransitionException(OrderStatus.WAITING_PAYMENT, OrderStatus.DELIVERED));
 
-        mockMvc.perform(put("/orders/1")
+        mockMvc.perform(put("/api/v1/orders/1")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -251,14 +251,14 @@ class OrderResourceTest {
     void delete_shouldReturn204_whenOrderExists() throws Exception {
         doNothing().when(orderService).delete(1L);
 
-        mockMvc.perform(delete("/orders/1").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/orders/1").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE /orders/{id} should return 403 when caller is not admin")
     void delete_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(delete("/orders/1").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(delete("/api/v1/orders/1").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -267,7 +267,7 @@ class OrderResourceTest {
     void delete_shouldReturn404_whenOrderNotFound() throws Exception {
         doThrow(new ResourceNotFoundException(99L)).when(orderService).delete(99L);
 
-        mockMvc.perform(delete("/orders/99").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/orders/99").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNotFound());
     }
 }

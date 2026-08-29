@@ -84,7 +84,7 @@ class ProductResourceTest {
         when(productService.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(productDTO)));
 
-        mockMvc.perform(get("/products").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/products").with(asRegularUser(1L)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
@@ -94,7 +94,7 @@ class ProductResourceTest {
     void findById_shouldReturn200_whenProductExists() throws Exception {
         when(productService.findById(1L)).thenReturn(productDTO);
 
-        mockMvc.perform(get("/products/1").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/products/1").with(asRegularUser(1L)))
                 .andExpect(status().isOk());
     }
 
@@ -103,7 +103,7 @@ class ProductResourceTest {
     void findById_shouldReturn404_whenProductNotFound() throws Exception {
         when(productService.findById(99L)).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(get("/products/99").with(asRegularUser(1L)))
+        mockMvc.perform(get("/api/v1/products/99").with(asRegularUser(1L)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource Not Found"));
     }
@@ -113,7 +113,7 @@ class ProductResourceTest {
     void insert_shouldReturn201_whenPayloadIsValid() throws Exception {
         when(productService.insert(any(ProductRequestDTO.class))).thenReturn(productDTO);
 
-        mockMvc.perform(post("/products")
+        mockMvc.perform(post("/api/v1/products")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -124,7 +124,7 @@ class ProductResourceTest {
     @Test
     @DisplayName("POST /products should return 403 when caller is not admin")
     void insert_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(post("/products")
+        mockMvc.perform(post("/api/v1/products")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +137,7 @@ class ProductResourceTest {
     void insert_shouldReturn422_whenNameIsBlank() throws Exception {
         requestDTO.setName("");
 
-        mockMvc.perform(post("/products")
+        mockMvc.perform(post("/api/v1/products")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -151,7 +151,7 @@ class ProductResourceTest {
     void update_shouldReturn200_whenPayloadIsValid() throws Exception {
         when(productService.update(anyLong(), any(ProductRequestDTO.class))).thenReturn(productDTO);
 
-        mockMvc.perform(put("/products/1")
+        mockMvc.perform(put("/api/v1/products/1")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,7 +162,7 @@ class ProductResourceTest {
     @Test
     @DisplayName("PUT /products/{id} should return 403 when caller is not admin")
     void update_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(put("/products/1")
+        mockMvc.perform(put("/api/v1/products/1")
                         .with(csrf())
                         .with(asRegularUser(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,7 +175,7 @@ class ProductResourceTest {
     void update_shouldReturn404_whenProductNotFound() throws Exception {
         when(productService.update(anyLong(), any(ProductRequestDTO.class))).thenThrow(new ResourceNotFoundException(99L));
 
-        mockMvc.perform(put("/products/99")
+        mockMvc.perform(put("/api/v1/products/99")
                         .with(csrf())
                         .with(asAdmin(1L))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -188,14 +188,14 @@ class ProductResourceTest {
     void delete_shouldReturn204_whenProductExists() throws Exception {
         doNothing().when(productService).delete(1L);
 
-        mockMvc.perform(delete("/products/1").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/products/1").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE /products/{id} should return 403 when caller is not admin")
     void delete_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(delete("/products/1").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(delete("/api/v1/products/1").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -204,7 +204,7 @@ class ProductResourceTest {
     void delete_shouldReturn404_whenProductNotFound() throws Exception {
         doThrow(new ResourceNotFoundException(99L)).when(productService).delete(99L);
 
-        mockMvc.perform(delete("/products/99").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/products/99").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNotFound());
     }
 
@@ -213,14 +213,14 @@ class ProductResourceTest {
     void addCategory_shouldReturn200() throws Exception {
         when(productService.addCategory(1L, 2L)).thenReturn(productDTO);
 
-        mockMvc.perform(put("/products/1/categories/2").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(put("/api/v1/products/1/categories/2").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("PUT /products/{productId}/categories/{categoryId} should return 403 when caller is not admin")
     void addCategory_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(put("/products/1/categories/2").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(put("/api/v1/products/1/categories/2").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 
@@ -229,14 +229,14 @@ class ProductResourceTest {
     void removeCategory_shouldReturn204() throws Exception {
         doNothing().when(productService).removeCategory(1L, 2L);
 
-        mockMvc.perform(delete("/products/1/categories/2").with(csrf()).with(asAdmin(1L)))
+        mockMvc.perform(delete("/api/v1/products/1/categories/2").with(csrf()).with(asAdmin(1L)))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE /products/{productId}/categories/{categoryId} should return 403 when caller is not admin")
     void removeCategory_shouldReturn403_whenNotAdmin() throws Exception {
-        mockMvc.perform(delete("/products/1/categories/2").with(csrf()).with(asRegularUser(1L)))
+        mockMvc.perform(delete("/api/v1/products/1/categories/2").with(csrf()).with(asRegularUser(1L)))
                 .andExpect(status().isForbidden());
     }
 }

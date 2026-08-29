@@ -30,10 +30,10 @@ class SecurityConfigTest {
     @Test
     @DisplayName("Protected endpoints should return 401 for unauthenticated requests")
     void protectedEndpoints_shouldReturn401_whenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/categories")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/products")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/orders")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/users")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/categories")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/products")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/orders")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
     }
 
     @Test

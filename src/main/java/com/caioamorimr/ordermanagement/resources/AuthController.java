@@ -81,7 +81,7 @@ public class AuthController {
         UserDTO created = userService.insert(dto);
         URI uri = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path("/users/{id}")
+                .path("/api/v1/users/{id}")
                 .buildAndExpand(created.getId())
                 .toUri();
         return ResponseEntity.created(uri).body(created);
