@@ -103,56 +103,72 @@ over the wire.
 
 ## API Endpoints
 
-All endpoints below require a `Authorization: Bearer <token>` header, except `/auth/login`, the Swagger routes, and the
-H2 console (test profile only).
+All business endpoints are versioned under `/api/v1`. They require an `Authorization: Bearer <token>` header, except the
+Swagger routes, the H2 console (test profile only), and `/actuator/health`. `/auth/**` is unversioned infrastructure and
+is always public - no token is exchanged yet at that point.
 
-### Auth
+Role column values: **any** = any authenticated user, **self** = any authenticated user acting on their own resource,
+**ADMIN** = requires the `ADMIN` role.
 
-| Method | Endpoint      | Description                                       |
-|--------|---------------|---------------------------------------------------|
-| POST   | `/auth/login` | Authenticate with email + password, returns a JWT |
+### Auth (`/auth`, unversioned, always public)
 
-### Categories
+| Method | Endpoint         | Description                                                                     |
+|--------|------------------|---------------------------------------------------------------------------------|
+| POST   | `/auth/login`    | Authenticate with email + password, returns a JWT + refresh token               |
+| POST   | `/auth/register` | Public self-registration; always creates an account with the `USER` role        |
+| POST   | `/auth/refresh`  | Exchange a valid refresh token for a new token pair (rotates the refresh token) |
+| POST   | `/auth/logout`   | Revoke a refresh token                                                          |
 
-| Method | Endpoint           | Description                 |
-|--------|--------------------|-----------------------------|
-| GET    | `/categories`      | List categories (paginated) |
-| GET    | `/categories/{id}` | Get a category by id        |
-| POST   | `/categories`      | Create a category           |
-| PUT    | `/categories/{id}` | Update a category           |
-| DELETE | `/categories/{id}` | Delete a category           |
+### Categories (`/api/v1/categories`)
 
-### Products
+| Method | Endpoint                  | Role  | Description                 |
+|--------|---------------------------|-------|-----------------------------|
+| GET    | `/api/v1/categories`      | any   | List categories (paginated) |
+| GET    | `/api/v1/categories/{id}` | any   | Get a category by id        |
+| POST   | `/api/v1/categories`      | ADMIN | Create a category           |
+| PUT    | `/api/v1/categories/{id}` | ADMIN | Update a category           |
+| DELETE | `/api/v1/categories/{id}` | ADMIN | Delete a category           |
 
-| Method | Endpoint                                        | Description                      |
-|--------|-------------------------------------------------|----------------------------------|
-| GET    | `/products`                                     | List products (paginated)        |
-| GET    | `/products/{id}`                                | Get a product by id              |
-| POST   | `/products`                                     | Create a product                 |
-| PUT    | `/products/{id}`                                | Update a product                 |
-| DELETE | `/products/{id}`                                | Delete a product                 |
-| PUT    | `/products/{productId}/categories/{categoryId}` | Attach a category to a product   |
-| DELETE | `/products/{productId}/categories/{categoryId}` | Detach a category from a product |
+### Products (`/api/v1/products`)
 
-### Users
+| Method | Endpoint                                               | Role  | Description                      |
+|--------|--------------------------------------------------------|-------|----------------------------------|
+| GET    | `/api/v1/products`                                     | any   | List products (paginated)        |
+| GET    | `/api/v1/products/{id}`                                | any   | Get a product by id              |
+| POST   | `/api/v1/products`                                     | ADMIN | Create a product                 |
+| PUT    | `/api/v1/products/{id}`                                | ADMIN | Update a product                 |
+| DELETE | `/api/v1/products/{id}`                                | ADMIN | Delete a product                 |
+| PUT    | `/api/v1/products/{productId}/categories/{categoryId}` | ADMIN | Attach a category to a product   |
+| DELETE | `/api/v1/products/{productId}/categories/{categoryId}` | ADMIN | Detach a category from a product |
 
-| Method | Endpoint      | Description            |
-|--------|---------------|------------------------|
-| GET    | `/users`      | List users (paginated) |
-| GET    | `/users/{id}` | Get a user by id       |
-| POST   | `/users`      | Register a user        |
-| PUT    | `/users/{id}` | Update a user          |
-| DELETE | `/users/{id}` | Delete a user          |
+### Users (`/api/v1/users`)
 
-### Orders
+To register your own account, use `POST /auth/register` above - `POST /api/v1/users` is the administrative creation
+endpoint and requires `ADMIN`.
 
-| Method | Endpoint       | Description                                    |
-|--------|----------------|------------------------------------------------|
-| GET    | `/orders`      | List orders (paginated)                        |
-| GET    | `/orders/{id}` | Get an order by id, with its items and payment |
-| POST   | `/orders`      | Create an order with one or more items         |
-| PUT    | `/orders/{id}` | Update an order                                |
-| DELETE | `/orders/{id}` | Delete an order                                |
+| Method | Endpoint             | Role         | Description                    |
+|--------|----------------------|--------------|--------------------------------|
+| GET    | `/api/v1/users`      | ADMIN        | List users (paginated)         |
+| GET    | `/api/v1/users/{id}` | self / ADMIN | Get a user by id               |
+| POST   | `/api/v1/users`      | ADMIN        | Administratively create a user |
+| PUT    | `/api/v1/users/{id}` | self / ADMIN | Update a user                  |
+| DELETE | `/api/v1/users/{id}` | ADMIN        | Delete a user                  |
+
+### Orders (`/api/v1/orders`)
+
+| Method | Endpoint              | Role         | Description                                                                 |
+|--------|-----------------------|--------------|-----------------------------------------------------------------------------|
+| GET    | `/api/v1/orders`      | ADMIN        | List orders (paginated)                                                     |
+| GET    | `/api/v1/orders/{id}` | self / ADMIN | Get an order by id, with its items and payment                              |
+| POST   | `/api/v1/orders`      | self / ADMIN | Create an order with one or more items (always starts as `WAITING_PAYMENT`) |
+| PUT    | `/api/v1/orders/{id}` | ADMIN        | Update an order (rejects illegal status transitions with a 409)             |
+| DELETE | `/api/v1/orders/{id}` | ADMIN        | Delete an order                                                             |
+
+### Health check (unversioned)
+
+| Method | Endpoint           | Role   | Description                                |
+|--------|--------------------|--------|--------------------------------------------|
+| GET    | `/actuator/health` | public | Basic UP/DOWN status, no component details |
 
 The full interactive documentation (with request/response schemas) is available at `/swagger-ui.html` while the
 application is running with any profile other than `prod`.
@@ -253,9 +269,11 @@ docker run -p 8080:8080 \
 ```
 
 > `host.docker.internal` resolves automatically on Docker Desktop (macOS/Windows). On native Docker Engine (Linux), the
-> `--add-host=host.docker.internal:host-gateway` flag above is required (Docker 20.10+). Even with the hostname resolving,
+> `--add-host=host.docker.internal:host-gateway` flag above is required (Docker 20.10+). Even with the hostname
+> resolving,
 > the connection will still be refused unless PostgreSQL is configured to accept it: by default `postgresql.conf` sets
-> `listen_addresses = 'localhost'`, which rejects connections arriving from the Docker bridge network. You'll need to set
+> `listen_addresses = 'localhost'`, which rejects connections arriving from the Docker bridge network. You'll need to
+> set
 > `listen_addresses = '*'` (or the bridge subnet specifically) and add a matching entry to `pg_hba.conf`. If that sounds
 > like more trouble than it's worth, use Option A instead.
 
